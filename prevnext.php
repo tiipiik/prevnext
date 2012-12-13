@@ -43,7 +43,7 @@ class Widget_Prevnext extends Widgets
 	 *
 	 * @var string
 	 */
-	public $version = '1.0';
+	public $version = '1.1';
 
 	/**
 	 * The fields for customizing the options of the widget.
@@ -56,7 +56,7 @@ class Widget_Prevnext extends Widgets
 	
 	public function format_url($slug, $unixtime) {
 		$year = date('Y', $unixtime);
-		$month = date('d', $unixtime);
+		$month = date('m', $unixtime);
 		$url = site_url("blog/$year/$month/$slug");
 		return $url;
 	}
