@@ -54,9 +54,11 @@ class Widget_Prevnext extends Widgets
 
 	);
 	
-	public function format_url($slug, $unixtime) {
-		$year = date('Y', $unixtime);
-		$month = date('m', $unixtime);
+	public function format_url($slug, $datetime) {
+		$date = explode('-',$datetime);
+		$year = $date[0];
+		$month = $date[1];
+		
 		$url = site_url("blog/$year/$month/$slug");
 		return $url;
 	}
@@ -74,28 +76,21 @@ class Widget_Prevnext extends Widgets
 			$slug = end($this->uri->segments);
 		
 			//Get ID of current post
-			$idquery = $this->db->query("SELECT id FROM default_blog WHERE slug = '$slug' and status = 'live'");
+			$idquery = $this->db->query("select id,created from default_blog where slug='".$slug."' and status='live'");
 			$idrow = $idquery->row();
 			$id = isset($idrow->id) ? $idrow->id : 0;
-			
-			//Get previous url
-			$prevurlquery = $this->db->query("SELECT slug, created_on FROM default_blog WHERE id < '$id' and status = 'live' ORDER BY id desc LIMIT 1");
+			$currentPost = isset($idrow->created) ? $idrow->created : 0;
+						
+			//Get previous url and title
+			$prevurlquery = $this->db->query("select created,title,slug from default_blog where created < '$currentPost' and status='live' order by created desc limit 1");
 			$purow = $prevurlquery->row();
-			$prev_url = isset($purow->slug) ? $this->format_url($purow->slug, $purow->created_on) : '';
+			$prev_url = isset($purow->slug) ? $this->format_url($purow->slug, $purow->created) : '';
+			$prev_title = isset($purow->title) ? $purow->title : '';
 			
-			//Get previous title
-			$prevtitlequery = $this->db->query("SELECT title FROM default_blog WHERE id < '$id' and status = 'live' ORDER BY id desc LIMIT 1");
-			$ptrow = $prevtitlequery->row();
-			$prev_title = isset($ptrow->title) ? $ptrow->title : '';
-			
-			//Get next url
-			$nexturlquery = $this->db->query("SELECT slug, created_on FROM default_blog WHERE id > '$id' and status = 'live' ORDER BY id asc LIMIT 1");
-			$nurow = $nexturlquery->row();
-			$next_url = isset($nurow->slug) ? $this->format_url($nurow->slug, $nurow->created_on) : '';
-	
-			//Get next title
-			$nexttitlequery = $this->db->query("SELECT title FROM default_blog WHERE id > '$id' and status = 'live' ORDER BY id asc LIMIT 1");
-			$ntrow = $nexttitlequery->row();
+			//Get next url and title
+			$nexturlquery = $this->db->query("select created,title,slug from default_blog where created > '$currentPost' and status='live' order by created asc limit 1");
+			$ntrow = $nexturlquery->row();
+			$next_url = isset($ntrow->slug) ? $this->format_url($ntrow->slug, $ntrow->created) : '';
 			$next_title = isset($ntrow->title) ? $ntrow->title : '';
 			
 			return array(
@@ -107,8 +102,6 @@ class Widget_Prevnext extends Widgets
 			);
 		}
 		
-		
-
 		// Display vars
 		return array(
 			'output' => $this->parser->parse_string($options['html'], NULL, TRUE),
